@@ -1,15 +1,26 @@
 const socketIo = io();
 
-socketIo.on("welcome", () => {
-    appendMessageToUI("누군가가 들어왔습니다.");
+socketIo.on("welcome", (new_user_nickname) => {
+    appendMessageToUI(`${new_user_nickname}님이 들어오셨습니다.`);
 });
 
-socketIo.on("bye", () => {
-    appendMessageToUI("누군가가 나갔습니다. :-(");
+socketIo.on("bye", (left_user_nickname) => {
+    appendMessageToUI(`${left_user_nickname}님이 나갔습니다.:-(`);
 });
 
 socketIo.on("new_message", (message) => {
     appendMessageToUI(message);
+});
+
+socketIo.on("room_change", (publicRoomNames) => {
+    console.log("publicRoomNames: ", publicRoomNames);
+    const parent = document.querySelector("#welcome .public_rooms");
+    // parent.innerHTML = JSON.stringify(publicRoomNames);
+    publicRoomNames.forEach(roomName => {
+        document.createElement("li");
+        li.innerText = roomName;
+        parent.append(li);
+    })
 });
 
 
@@ -50,13 +61,24 @@ welcomeForm.addEventListener("submit", (event) => {
     });
 });
 
-document.querySelector("#room form").addEventListener("submit", (event) => {
+document.querySelector("#room form#name").addEventListener("submit", function(event) {
+    event.preventDefault();
+    const nickname = this.querySelector("input").value;
+    this.querySelector("input").value = "";
+    console.log("닉네임 입력:", nickname);
+    socketIo.emit("nickname", nickname);
+});
+
+document.querySelector("#room form#msg").addEventListener("submit", function(event) {
     event.preventDefault();
 
-    const message = document.querySelector("#room form input").value;
-    document.querySelector("#room form input").value = "";
+    const message = this.querySelector("input").value;
+    this.querySelector("input").value = "";
 
     socketIo.emit("new_message", message, roomName, () => {
         appendMessageToUI(`You : ${message}`);
     });
 });
+
+
+//function과 () => 최상위 달라지는거 알기
